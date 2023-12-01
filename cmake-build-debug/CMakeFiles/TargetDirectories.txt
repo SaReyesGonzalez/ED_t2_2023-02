@@ -1,0 +1,3 @@
+/home/sebastian/Programacion/C++/t2_c4/cmake-build-debug/CMakeFiles/t2_c4.dir
+/home/sebastian/Programacion/C++/t2_c4/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/sebastian/Programacion/C++/t2_c4/cmake-build-debug/CMakeFiles/rebuild_cache.dir
