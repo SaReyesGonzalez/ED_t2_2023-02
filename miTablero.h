@@ -2,8 +2,10 @@
 // Created by sebastian on 30-11-23.
 //
 
+/*
 #ifndef T2_C4_MITABLERO_H
 #define T2_C4_MITABLERO_H
+
 
 
 class miTablero {
@@ -20,3 +22,4 @@ class miTablero {
 
 
 #endif //T2_C4_MITABLERO_H
+*/

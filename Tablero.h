@@ -19,11 +19,16 @@ using namespace std;
 class Tablero {
 private:
     char tablero[HEIGHT][WIDTH];
-    std::string partidaActual;
+    char auxTablero[HEIGHT][WIDTH];
+    string partidaActual;
     int puntajeActual;
 
 public:
     Tablero();
+
+    bool agregarFicha(int columna, char ficha);
+
+    void igualarTableros(bool switchOriginalCopy);
 
     void imprimirTablero();
 
@@ -37,7 +42,7 @@ public:
 
     int evaluarVentana(vector<char> window, char ficha); // NADA
 
-    int puntajeJugada(char aux_t[HEIGHT][WIDTH], char ficha); // FALTA
+    int puntajeJugada(char ficha); // FALTA
 
     bool esNodoTerminal(); // BUENO
 

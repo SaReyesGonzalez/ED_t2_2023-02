@@ -8,6 +8,28 @@ Tablero::Tablero() {
             tablero[i][j] = NEUTRO;
         }
     }
+
+    for (int i = 0; i < HEIGHT; ++i) {
+        for (int j = 0; j < WIDTH; ++j) {
+            auxTablero[i][j] = NEUTRO;
+        }
+    }
+}
+
+bool Tablero::agregarFicha(int columna, char ficha) {
+
+    if (columna >= WIDTH) {
+        return false;
+    }
+
+    for (int i = HEIGHT - 1; i >= 0 ; i--) {
+        if (tablero[i][columna] == NEUTRO) {
+            tablero[i][columna] = ficha;
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void Tablero::imprimirTablero() {
@@ -18,15 +40,17 @@ void Tablero::imprimirTablero() {
         cout << endl;
     }
 
-    for (int j = 1; j <= WIDTH; j++) {
+    for (int i = 1; i <= WIDTH; i++) {
         cout << "--";
     }
 
     cout << endl;
 
-    for (int j = 1; j <= WIDTH; j++) {
-        cout << j << " ";
+    for (int i = 1; i <= WIDTH; i++) {
+        cout << i << " ";
     }
+
+    cout << endl;
 }
 
 void Tablero::jugarPieza(char t[HEIGHT][WIDTH], int fila, int col, char ficha) {
@@ -100,10 +124,35 @@ bool Tablero::comprobarVictoria(char ficha) {
 }
 
 int Tablero::evaluarVentana(vector<char> window, char ficha) {
-    return 0;
+    int puntaje = 0;
+    char piezaOponente = FICHA_JUGADOR;
+
+    if (ficha == FICHA_JUGADOR) {
+        piezaOponente = FICHA_IA;
+    }
+
+    if (count(window.begin(), window.end(), ficha) == 4) {
+        puntaje += 100;
+
+    } else if ((count(window.begin(), window.end(), ficha) == 3)
+        && (count(window.begin(), window.end(), NEUTRO) == 1)) {
+        puntaje += 5;
+
+    } else if ((count(window.begin(), window.end(), ficha) == 2)
+               && (count(window.begin(), window.end(), NEUTRO) == 2)) {
+        puntaje += 2;
+    }
+
+    if ((count(window.begin(), window.end(), piezaOponente) == 3)
+                && (count(window.begin(), window.end(), NEUTRO) == 1)) {
+        puntaje -= 4;
+    }
+
+    return puntaje;
+
 }
 
-int Tablero::puntajeJugada(char aux_t[HEIGHT][WIDTH], char ficha) {
+int Tablero::puntajeJugada(char ficha) {
     int puntaje = 0;
 
     // Puntaje columna central
@@ -173,8 +222,9 @@ bool Tablero::esNodoTerminal() {
     return comprobarVictoria(FICHA_JUGADOR) || comprobarVictoria(FICHA_IA) || getPosicionesValidas().empty();
 }
 
-
 pair<int,int> Tablero::minimax(int profundidad, int alfa, int beta, bool jugadorMax) {
+
+    igualarTableros(true);
     vector<int> posicionesValidas = getPosicionesValidas();
     bool esTerminal = esNodoTerminal();
 
@@ -186,45 +236,67 @@ pair<int,int> Tablero::minimax(int profundidad, int alfa, int beta, bool jugador
             {
                 return make_pair(-1,100000000000);
 
-            } else if (FICHA_JUGADOR) {
+            } else if (comprobarVictoria(FICHA_JUGADOR)) {
                 return make_pair(-1, -10000000000);
 
             } else {
                 return make_pair(-1,0);
             }
-        }
-
-        else {
-            //return make_pair(-1, puntajeJugada(FICHA_IA)); //CORREGIR
+        } else {
+            return make_pair(-1, puntajeJugada(FICHA_IA)); // Correccion
         }
     }
 
     if (jugadorMax) {
         int valor = -numeric_limits<int>::infinity();
-        int column = rand() % posicionesValidas.size();
+        int columna = eleccionAleatoria(posicionesValidas);
 
         for (int col : posicionesValidas) {
-            int row = getFilaValida(col);
-            vector<vector<int>> b_copy = tablero;
-            jugarPieza(b_copy, row, col, FICHA_IA);
-            int new_score = minimax(b_copy, profundidad - 1, alfa, beta, false).second;
+            int fila = getFilaValida(col);
+            jugarPieza(auxTablero, fila, col, FICHA_IA);
+            int nuevoPuntaje = minimax(profundidad - 1, alfa, beta, false).second;
 
-            if (new_score > valor) {
-                valor = new_score;
-                column = col;
+            if (nuevoPuntaje > valor) {
+                valor = nuevoPuntaje;
+                columna = col;
             }
 
-            alfa = std::max(alfa, valor);
+            alfa = max(alfa, valor);
 
             if (alfa >= beta) {
                 break;
             }
         }
 
+        igualarTableros(false);
+        return make_pair(columna, valor);
+
+    } else {
+        int valor = numeric_limits<int>::infinity();
+        int columna = rand() % posicionesValidas.size();
+
+        for (int col : posicionesValidas) {
+            int row = getFilaValida(col);
+            jugarPieza(auxTablero, row, col, FICHA_IA);
+            int nuevoPuntaje = minimax(profundidad - 1, alfa, beta, true).second;
+
+            if (nuevoPuntaje < valor) {
+                valor = nuevoPuntaje;
+                columna = col;
+            }
+
+            alfa = max(alfa, valor);
+
+            if (alfa >= beta) {
+                break;
+            }
+        }
+
+        igualarTableros(false);
+        return make_pair(columna, valor);
+
     }
 }
-
-
 
 vector<int> Tablero::getPosicionesValidas() {
     vector<int> posicionesValidas;
@@ -255,7 +327,7 @@ int Tablero::elegirMejorJugada(char ficha) {
             }
         }
 
-        int puntaje = puntajeJugada(temp_tablero, ficha);
+        int puntaje = puntajeJugada(ficha);
 
         if (puntaje > mejorPuntaje) {
             mejorPuntaje = puntaje;
@@ -266,8 +338,25 @@ int Tablero::elegirMejorJugada(char ficha) {
     return mejorColumna;
 }
 
-
 int Tablero::eleccionAleatoria(vector<int> &lugaresValidos) {
     int random_index = rand() % lugaresValidos.size();
     return lugaresValidos[random_index];
+}
+
+void Tablero::igualarTableros(bool switchOriginalCopy) {
+
+    if (switchOriginalCopy) {
+        for (int i = 0; i < HEIGHT; ++i) {
+            for (int j = 0; j < WIDTH; ++j) {
+                auxTablero[i][j] = tablero[i][j];
+            }
+        }
+    } else {
+        for (int i = 0; i < HEIGHT; ++i) {
+            for (int j = 0; j < WIDTH; ++j) {
+                tablero[i][j] = auxTablero[i][j];
+            }
+        }
+    }
+
 }

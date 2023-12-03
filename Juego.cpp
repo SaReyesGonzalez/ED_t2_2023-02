@@ -1,3 +1,4 @@
+#include <limits>
 #include "Juego.h"
 
 Juego::Juego() {
@@ -11,7 +12,7 @@ void Juego::setPuntaje(int _puntaje) {
     puntaje = _puntaje;
 }
 
-void Juego::c4_facil(Tablero tablero) {
+void Juego::c4_facil(Tablero tablero) {  // LISTO !!!!!!!
     bool gameOver = false;
     bool movimientoValido = true;
     int turno = 0;
@@ -20,45 +21,35 @@ void Juego::c4_facil(Tablero tablero) {
         tablero.imprimirTablero();
 
         if (turno == PLAYER) { //Turno jugador
-
             int columna;
-            cout << "\n\nIngrese columna a jugar: ";
+            cout << "\nIngrese columna a jugar: ";
             cin >> columna;
 
-            if (tablero.esPosicionValida(columna)) {
-                int fila = tablero.getFilaValida(columna);
-                tablero.jugarPieza(this.tablero, fila, columna, FICHA_JUGADOR);
+           movimientoValido = tablero.agregarFicha(columna - 1,FICHA_JUGADOR);
 
-                if (tablero.comprobarVictoria(FICHA_JUGADOR))
-                {
-                    gameOver = true;
-                }
-            }
+           while (!movimientoValido) {
+               cout << "\nMovimiento invalido" << endl;
 
-            turno += 1;
-            turno = turno % 2;
+               cout << "\nIngrese columna a jugar: ";
+               cin >> columna;
+
+               movimientoValido = tablero.agregarFicha(columna - 1, FICHA_IA);
+           }
+
+            gameOver= tablero.comprobarVictoria(FICHA_JUGADOR);
         }
 
-        if (turno == IA && !gameOver) { // Turno IA
+        if (turno == IA) { // Turno IA
 
             int columna = generarNumeroAleatorio();
 
-            movimientoValido = tablero.agregarFicha(columna - 1, FICHA_IA);
-
-            while (!movimientoValido) {
-                cout << "\nMovimiento invalido" << endl;
-
-                cout << "\nIngrese columna a jugar: ";
-                cin >> columna;
-
-                movimientoValido = tablero.agregarFicha(columna - 1, FICHA_IA);
-            }
-
-            turno += 1;
-            turno = turno % 2;
+            tablero.agregarFicha(columna - 1, FICHA_IA);
 
             gameOver= tablero.comprobarVictoria(FICHA_IA);
         }
+
+        turno += 1;
+        turno = turno % 2;
     }
 
     if (turno == 1) {
@@ -69,7 +60,7 @@ void Juego::c4_facil(Tablero tablero) {
         tablero.imprimirTablero();
         cout << "\n\nLo lamento, no hay nada pudieras haber hecho ante el poder de la IA..." << endl;
     }
-}
+}  // LISTO !!1
 
 void Juego::c4_medio() {
 
@@ -85,36 +76,11 @@ void Juego::c4_dificil(Tablero tablero) {
         tablero.imprimirTablero();
 
         if (turno == PLAYER) { //Turno jugador
-
             int columna;
-            cout << "\n\nTURNO JUGADOR" << endl;
-            cout << "Ingrese columna a jugar: ";
+            cout << "\nIngrese columna a jugar: ";
             cin >> columna;
 
-            movimientoValido = tablero.agregarFicha(columna - 1, FICHA_JUGADOR);
-
-            while (!movimientoValido) {
-                cout << "\nMovimiento invalido" << endl;
-
-                cout << "\nIngrese columna a jugar: ";
-                cin >> columna;
-
-                movimientoValido = tablero.agregarFicha(columna - 1, FICHA_JUGADOR);
-            }
-
-            turno += 1;
-            turno = turno % 2;
-
-            gameOver = tablero.comprobarVictoria(FICHA_JUGADOR);
-
-        }
-
-        if (turno == IA && !gameOver) { // Turno IA
-            int columna;
-
-            columna = tablero.elegirMejorJugada(FICHA_IA);
-
-            movimientoValido = tablero.agregarFicha(columna - 1, FICHA_IA);
+            movimientoValido = tablero.agregarFicha(columna - 1,FICHA_JUGADOR);
 
             while (!movimientoValido) {
                 cout << "\nMovimiento invalido" << endl;
@@ -125,11 +91,29 @@ void Juego::c4_dificil(Tablero tablero) {
                 movimientoValido = tablero.agregarFicha(columna - 1, FICHA_IA);
             }
 
-            turno += 1;
-            turno = turno % 2;
-
-            gameOver= tablero.comprobarVictoria(FICHA_IA);
+            gameOver = tablero.comprobarVictoria(FICHA_JUGADOR);
         }
+
+        if (turno == IA) { // Turno IA
+
+            int columna;
+            int alfa = -numeric_limits<int>::infinity();
+            int beta = numeric_limits<int>::infinity();
+
+            pair<int,int> p = tablero.minimax(5,alfa,beta,true);
+            columna = p.first;
+
+            movimientoValido = tablero.agregarFicha(columna - 1,FICHA_IA);
+
+            while (!movimientoValido) {
+                movimientoValido = tablero.agregarFicha(columna - 1, FICHA_IA);
+            }
+
+            gameOver = tablero.comprobarVictoria(FICHA_IA);
+        }
+
+        turno += 1;
+        turno = turno % 2;
     }
 
     if (turno == 1) {
